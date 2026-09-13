@@ -21,7 +21,18 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include <map>
 #include <vector>
 #include <assert.h>
+#include <string.h>
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <stdio.h>
+// MSVC CRT extension, only ever called with base 10 below
+static char * _itoa(int value, char * buffer, int)
+{
+    sprintf(buffer, "%d", value);
+    return buffer;
+}
+#endif
 
 #include "ILexer.h"
 #include "LexAccessor.h"

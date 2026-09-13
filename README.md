@@ -6,8 +6,8 @@ What is Notepad++ ?
 
 Notepad++ is a free (free as in both "free speech" and "free beer") source code
 editor and Notepad replacement that supports several programming languages and
-natural languages. Running in the MS Windows environment, its use is governed by
-[GPL License](LICENSE).
+natural languages. It keeps the same Win32 user interface on Windows, Linux, and
+macOS. Its use is governed by [GPL License](LICENSE).
 
 See the [Notepad++ official site](https://notepad-plus-plus.org/) for more information.
 
@@ -30,7 +30,7 @@ https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/nppGpgPub.asc
 Supported OS
 ------------
 
-All the Windows systems still supported by Microsoft are supported by Notepad++. However, not all Notepad++ users can or want to use the newest system. Here is the [Supported systems information](SUPPORTED_SYSTEM.md) you may need in case you are one of them.
+All the Windows systems still supported by Microsoft are supported by Notepad++. Linux and macOS builds use the same application UI through a GTK-backed Win32 compatibility layer. Here is the [Supported systems information](SUPPORTED_SYSTEM.md).
 
 
 

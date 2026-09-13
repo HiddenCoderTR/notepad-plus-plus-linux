@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cwchar>
+#include <filesystem>
 #include <string>
 #include <utility>
 #include <vector>
@@ -810,6 +811,8 @@ bool PluginsAdminDlg::initFromJson()
 	// load from nppPluginList.json instead of nppPluginList.dll
 #ifdef __MINGW32__
 	ifstream nppPluginListJson(wstring2string(_pluginListFullPath, CP_UTF8));
+#elif !defined(_WIN32)
+	ifstream nppPluginListJson{std::filesystem::path(_pluginListFullPath)};
 #else // MSVC supports UTF-16 path names in file stream constructors 
 	ifstream nppPluginListJson(_pluginListFullPath);
 #endif

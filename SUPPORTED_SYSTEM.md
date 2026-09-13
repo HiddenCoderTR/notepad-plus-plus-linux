@@ -24,4 +24,9 @@
 
 \* The current version of Notepad++ built by GCC can be run under Vista & Server 2008
 
-*Note that the list is meant for the last SP of each version*
+|           OS            | last version can be run  |      supported            |
+|-------------------------|--------------------------|---------------------------|
+| **Linux (GTK 3)**       | current version          |          Yes              |
+| **macOS**               | current version          |          Yes              |
+
+*Note that the Windows list is meant for the last SP of each version. Linux and macOS keep the Notepad++ UI and are built with CMake.*

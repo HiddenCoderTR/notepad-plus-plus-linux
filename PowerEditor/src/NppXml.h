@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <cstring>
 #include <concepts>
+#include <filesystem>
 #include <string>
 #include <type_traits>
 
@@ -38,6 +39,9 @@ namespace NppXml
 
 	[[nodiscard]] inline bool loadFile(Document doc, const wchar_t* filename) {
 		return doc->load_file(filename, pugi::parse_default | pugi::parse_comments | pugi::parse_declaration);
+	}
+	[[nodiscard]] inline bool loadFile(Document doc, const char* filename) {
+		return loadFile(doc, std::filesystem::path(filename ? filename : "").wstring().c_str());
 	}
 
 	[[nodiscard]] inline bool saveFile(const Document doc, const wchar_t* filename) {

@@ -381,10 +381,12 @@ SET(rcFiles
 			./WinControls/ColourPicker/WordStyleDlg.rc
 )
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 IF (WIN32)
 	SET(option WIN32)
 	SET(win32_LIBRARIES comctl32 shlwapi dbghelp version crypt32 wintrust sensapi wininet imm32 msimg32 uxtheme dwmapi)
-	set(CMAKE_CXX_STANDARD 20)
 if ( MSVC )
 	#do not use for mingw builds
 	SET(CMAKE_CXX_FLAGS "/EHa /MP /W4")
@@ -396,35 +398,143 @@ else ( MSVC )
 	SET(CMAKE_CXX_FLAGS "-include../gcc/gcc-fixes.h -std=c++20 -fpermissive -municode")
 	SET(defs -DUNICODE -D_UNICODE -D_WIN32_WINNT=_WIN32_WINNT_WIN7 -DNTDDI_VERSION=NTDDI_WIN7 -D_USE_64BIT_TIME_T -DNOMINMAX -DOEMRESOURCE)
 endif ( MSVC )
-ENDIF (WIN32)
 
-ADD_DEFINITIONS(${defs})
+	ADD_DEFINITIONS(${defs})
+	INCLUDE_DIRECTORIES(${projIncludDir})
 
-INCLUDE_DIRECTORIES(${projIncludDir})
+	find_library(SCINTILLA_STATIC_LIBRARY
+		NAMES libscintilla
+		HINTS "../../scintilla/bin"
+		REQUIRED
+	)
 
-find_library(SCINTILLA_STATIC_LIBRARY
-	NAMES libscintilla
-	HINTS "../../scintilla/bin"
-	REQUIRED
-)
+	find_library(LEXILLA_STATIC_LIBRARY
+		NAMES liblexilla
+		HINTS "../../lexilla/bin"
+		REQUIRED
+	)
 
-find_library(LEXILLA_STATIC_LIBRARY
-	NAMES liblexilla
-	HINTS "../../lexilla/bin"
-	REQUIRED
-)
+	if (WIN32)
+		execute_process(
+			COMMAND cmd /C "cd ${CMAKE_CURRENT_SOURCE_DIR} && NppLibsVersionH-generator.bat"
+			RESULT_VARIABLE pre-build-result
+			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		)
+		if(NOT pre-build-result EQUAL 0)
+			message(FATAL_ERROR "Pre-build event failed with exit code: ${pre-build-result}")
+		endif()
+	endif()
 
-execute_process(
-    COMMAND cmd /C "cd ${CMAKE_SOURCE_DIR} && NppLibsVersionH-generator.bat"
-    RESULT_VARIABLE pre-build-result
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-if(NOT pre-build-result EQUAL 0)
-    message(FATAL_ERROR "Pre-build event failed with exit code: ${pre-build-result}")
-endif()
+	ADD_EXECUTABLE(notepad++ ${option} ${src_files} ${include_files} ${rcFiles})
+	TARGET_LINK_LIBRARIES (notepad++ ${SCINTILLA_STATIC_LIBRARY} ${LEXILLA_STATIC_LIBRARY} ${win32_LIBRARIES})
 
-ADD_EXECUTABLE(notepad++ ${option} ${src_files} ${include_files} ${rcFiles})
+ELSE()
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+	pkg_check_modules(GMODULE REQUIRED gmodule-no-export-2.0)
 
+	set(NPP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+	set(UNIX_PLATFORM "${CMAKE_CURRENT_SOURCE_DIR}/Platform/unix")
 
-TARGET_LINK_LIBRARIES (notepad++ ${SCINTILLA_STATIC_LIBRARY} ${LEXILLA_STATIC_LIBRARY} ${win32_LIBRARIES})
+	execute_process(
+		COMMAND python3 "${UNIX_PLATFORM}/tools/generate_npp_libs_version.py"
+		RESULT_VARIABLE genver
+	)
+	if(NOT genver EQUAL 0)
+		message(WARNING "Could not generate NppLibsVersion.h (exit ${genver})")
+	endif()
+
+	list(FILTER src_files EXCLUDE REGEX "notepad\\+\\+\\.exe\\.manifest$")
+	list(REMOVE_ITEM src_files
+		./DarkMode/DarkMode.cpp
+		./MISC/Common/verifySignedfile.cpp
+		./WinControls/OpenSaveFileDialog/CustomFileDialog.cpp
+		./MISC/Exception/MiniDumper.cpp
+		./MISC/Exception/Win32Exception.cpp
+	)
+
+	set(unix_src
+		${UNIX_PLATFORM}/src/npp_main.cpp
+		${UNIX_PLATFORM}/src/npp_win32_core.cpp
+		${UNIX_PLATFORM}/src/npp_win32_gdi.cpp
+		${UNIX_PLATFORM}/src/npp_win32_kernel.cpp
+		${UNIX_PLATFORM}/src/npp_win32_shell.cpp
+		${UNIX_PLATFORM}/src/npp_win32_controls.cpp
+		${UNIX_PLATFORM}/src/npp_win32_resources.cpp
+		${UNIX_PLATFORM}/src/npp_win32_misc.cpp
+		${UNIX_PLATFORM}/src/npp_win32_extra.cpp
+		${UNIX_PLATFORM}/src/npp_scintilla.cpp
+		${UNIX_PLATFORM}/src/npp_rc_data.cpp
+		${UNIX_PLATFORM}/src/DarkMode_unix.cpp
+		${UNIX_PLATFORM}/src/MiniDumper_unix.cpp
+		${UNIX_PLATFORM}/src/Win32Exception_unix.cpp
+		${UNIX_PLATFORM}/src/verifySignedfile_unix.cpp
+		${UNIX_PLATFORM}/src/CustomFileDialog_unix.cpp
+	)
+
+	file(GLOB scintilla_src
+		"${NPP_ROOT}/scintilla/src/*.cxx"
+		"${NPP_ROOT}/scintilla/gtk/PlatGTK.cxx"
+		"${NPP_ROOT}/scintilla/gtk/ScintillaGTK.cxx"
+		"${NPP_ROOT}/scintilla/gtk/ScintillaGTKAccessible.cxx"
+	)
+	add_library(scintilla_gtk STATIC
+		${scintilla_src}
+		"${NPP_ROOT}/scintilla/gtk/scintilla-marshal.c"
+	)
+	target_compile_definitions(scintilla_gtk PRIVATE GTK)
+	target_include_directories(scintilla_gtk PRIVATE
+		"${NPP_ROOT}/scintilla/include"
+		"${NPP_ROOT}/scintilla/src"
+		"${NPP_ROOT}/scintilla/gtk"
+		${GTK3_INCLUDE_DIRS}
+	)
+	target_compile_options(scintilla_gtk PRIVATE ${GTK3_CFLAGS_OTHER} -fPIC)
+	set_target_properties(scintilla_gtk PROPERTIES CXX_STANDARD 17)
+
+	file(GLOB lexilla_src
+		"${NPP_ROOT}/lexilla/src/*.cxx"
+		"${NPP_ROOT}/lexilla/lexlib/*.cxx"
+		"${NPP_ROOT}/lexilla/lexers/*.cxx"
+	)
+	add_library(lexilla_unix STATIC ${lexilla_src})
+	target_include_directories(lexilla_unix PRIVATE
+		"${NPP_ROOT}/lexilla/include"
+		"${NPP_ROOT}/lexilla/lexlib"
+		"${NPP_ROOT}/scintilla/include"
+	)
+	set_target_properties(lexilla_unix PROPERTIES CXX_STANDARD 17)
+
+	add_executable(notepad++ ${src_files} ${unix_src})
+	target_compile_definitions(notepad++ PRIVATE
+		UNICODE _UNICODE NOMINMAX GTK
+		_CRT_SECURE_NO_WARNINGS
+		_GNU_SOURCE
+	)
+	target_include_directories(notepad++ PRIVATE
+		${UNIX_PLATFORM}/include
+		${UNIX_PLATFORM}/src
+		${GTK3_INCLUDE_DIRS}
+		${projIncludDir}
+		"${NPP_ROOT}/scintilla/include"
+		"${NPP_ROOT}/lexilla/include"
+	)
+	if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+		target_compile_definitions(notepad++ PRIVATE _WIN64)
+	endif()
+	target_compile_options(notepad++ PRIVATE
+		${GTK3_CFLAGS_OTHER}
+		-include ${UNIX_PLATFORM}/include/unix-fixes.h
+		-fpermissive -fms-extensions -fPIC
+		-Wno-deprecated-declarations
+		-Wno-conversion
+		-Wno-write-strings
+	)
+	target_link_libraries(notepad++ PRIVATE
+		scintilla_gtk lexilla_unix
+		${GTK3_LIBRARIES} ${GMODULE_LIBRARIES}
+		pthread dl m
+	)
+	target_link_directories(notepad++ PRIVATE ${GTK3_LIBRARY_DIRS} ${GMODULE_LIBRARY_DIRS})
+ENDIF()
 

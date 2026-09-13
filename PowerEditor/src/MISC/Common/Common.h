@@ -22,6 +22,7 @@
 #include <commctrl.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <locale>
 #include <string>
 #include <unordered_set>
@@ -56,6 +57,10 @@ bool matchInList(const wchar_t *fileName, const std::vector<std::wstring> & patt
 bool matchInExcludeDirList(const wchar_t* dirName, const std::vector<std::wstring>& patterns, size_t level);
 bool allPatternsAreExclusion(const std::vector<std::wstring>& patterns);
 HRESULT openInExplorerAndSelect(const wchar_t* path);
+inline HRESULT openInExplorerAndSelect(const char* path)
+{
+	return openInExplorerAndSelect(std::filesystem::path(path ? path : "").wstring().c_str());
+}
 
 class WcharMbcsConvertor final
 {
@@ -270,8 +275,16 @@ BOOL getFileAttributesExWithTimeout(const wchar_t* filePath, WIN32_FILE_ATTRIBUT
 	DWORD milliSec2wait = 0, bool* isTimeoutReached = nullptr, DWORD* pdwWin32ApiError = nullptr);
 
 bool doesFileExist(const wchar_t* filePath, DWORD milliSec2wait = 0, bool* isTimeoutReached = nullptr);
+inline bool doesFileExist(const char* filePath, DWORD milliSec2wait = 0, bool* isTimeoutReached = nullptr)
+{
+	return doesFileExist(std::filesystem::path(filePath ? filePath : "").wstring().c_str(), milliSec2wait, isTimeoutReached);
+}
 bool doesDirectoryExist(const wchar_t* dirPath, DWORD milliSec2wait = 0, bool* isTimeoutReached = nullptr);
 bool doesPathExist(const wchar_t* path, DWORD milliSec2wait = 0, bool* isTimeoutReached = nullptr);
+inline bool doesPathExist(const char* path, DWORD milliSec2wait = 0, bool* isTimeoutReached = nullptr)
+{
+	return doesPathExist(std::filesystem::path(path ? path : "").wstring().c_str(), milliSec2wait, isTimeoutReached);
+}
 
 
 // check if the window rectangle intersects with any currently active monitor's working area

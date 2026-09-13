@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #include "ImageListSet.h"
 #include "Notepad_plus_msgs.h"

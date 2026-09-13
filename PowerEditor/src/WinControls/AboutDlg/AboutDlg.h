@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <filesystem>
+#include <string>
+
 #include "URLCtrl.h"
 #include "resource.h"
 #include "StaticDialog.h"

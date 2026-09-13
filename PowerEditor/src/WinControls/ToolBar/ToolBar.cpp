@@ -189,7 +189,7 @@ void ToolBar::initTheme(NppXml::Document toolIconsDocRoot)
 			const char* folderName = NppXml::attribute(_toolIcons, "icoFolderName");
 			iconFolderDir /= (folderName ? string2wstring(folderName, CP_UTF8) : L"default");
 
-			if (isUncPath(iconFolderDir))
+			if (isUncPath(iconFolderDir.wstring()))
 			{
 				NppGUI& nppGUI = nppParams.getNppGUI();
 				if (nppGUI._networkPathWarningMethod == NppGUI::networkPathAlwaysAsk)
@@ -197,7 +197,7 @@ void ToolBar::initTheme(NppXml::Document toolIconsDocRoot)
 					const NativeLangSpeaker* pNativeLangSpeaker = nppParams.getNativeLangSpeaker();
 
 					NetworkPathWarningBox networkPathWarningBox;
-					networkPathWarningBox.init(_hInst, _hParent, iconFolderDir, "title3");
+					networkPathWarningBox.init(_hInst, _hParent, iconFolderDir.wstring(), "title3");
 					networkPathWarningBox.doDialog(pNativeLangSpeaker ? pNativeLangSpeaker->isRTL() : false);
 					int buttonID = networkPathWarningBox.getClickedButtonId();
 					networkPathWarningBox.destroy();
@@ -227,10 +227,10 @@ void ToolBar::initTheme(NppXml::Document toolIconsDocRoot)
 				locator.replace_extension(ext);
 				if (doesFileExist(locator.c_str()))
 				{
-					_customIconVect.push_back(iconLocator(HLIST_DEFAULT, i, locator));
-					_customIconVect.push_back(iconLocator(HLIST_DEFAULT2, i, locator));
-					_customIconVect.push_back(iconLocator(HLIST_DEFAULT_DM, i, locator));
-					_customIconVect.push_back(iconLocator(HLIST_DEFAULT_DM2, i, locator));
+					_customIconVect.push_back(iconLocator(HLIST_DEFAULT, i, locator.wstring()));
+					_customIconVect.push_back(iconLocator(HLIST_DEFAULT2, i, locator.wstring()));
+					_customIconVect.push_back(iconLocator(HLIST_DEFAULT_DM, i, locator.wstring()));
+					_customIconVect.push_back(iconLocator(HLIST_DEFAULT_DM2, i, locator.wstring()));
 				}
 
 				if (icoUnit._hasDisabledIcon)
@@ -241,10 +241,10 @@ void ToolBar::initTheme(NppXml::Document toolIconsDocRoot)
 					locator_dis.replace_extension(ext);
 					if (doesFileExist(locator_dis.c_str()))
 					{
-						_customIconVect.push_back(iconLocator(HLIST_DISABLE, i, locator_dis));
-						_customIconVect.push_back(iconLocator(HLIST_DISABLE2, i, locator_dis));
-						_customIconVect.push_back(iconLocator(HLIST_DISABLE_DM, i, locator_dis));
-						_customIconVect.push_back(iconLocator(HLIST_DISABLE_DM2, i, locator_dis));
+						_customIconVect.push_back(iconLocator(HLIST_DISABLE, i, locator_dis.wstring()));
+						_customIconVect.push_back(iconLocator(HLIST_DISABLE2, i, locator_dis.wstring()));
+						_customIconVect.push_back(iconLocator(HLIST_DISABLE_DM, i, locator_dis.wstring()));
+						_customIconVect.push_back(iconLocator(HLIST_DISABLE_DM2, i, locator_dis.wstring()));
 					}
 				}
 				++i;

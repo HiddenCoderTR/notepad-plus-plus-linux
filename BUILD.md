@@ -72,3 +72,21 @@ Building Notepad++ is regularly tested on a Windows system by using [MSYS2](http
 - When a project is built through MinGW-w64 with multilib support, a specific target can be forced by passing `TARGET_CPU` variable with `x86_64` or `i686` as value.
 - To use Clang instead of GCC for compilation provide `CXX` variable with `clang++` as value.
 - To use [Clang analyzer](https://clang-analyzer.llvm.org/) together with Clang provide `CLANGANALYZE=1` to the `mingw32-make` invocation.
+
+## Linux and macOS (CMake + GTK 3)
+
+The Unix build keeps the existing Notepad++ Win32 UI. A GTK 3 compatibility layer implements `windows.h` so application sources are not rewritten.
+
+**Pre-requisites:**
+
+- CMake 3.16 or newer
+- A C++20 compiler (GCC or Clang)
+- GTK 3 development packages (`libgtk-3-dev` on Debian/Ubuntu)
+- Python 3
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+```
+
+The `notepad++` binary is produced in the CMake build directory. Windows Visual Studio and MinGW procedures above are unchanged.
